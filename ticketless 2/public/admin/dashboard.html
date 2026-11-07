@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioTransit AI - Central Administrative Control Panel</title>
+  <meta name="description" content="Centralized transit management dashboard for commuter biometrics, gate turnstiles, attendance tracking, feedback, content, and reports.">
+
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Chart.js for High-Performance Interactive Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Admin Theme Stylesheet -->
+  <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <div class="admin-layout">
+
+    <!-- ========================================================================
+         SIDEBAR NAVIGATION
+         ======================================================================== -->
+    <aside class="admin-sidebar" id="admin-sidebar">
+      
+      <!-- Brand Header -->
+      <div class="sidebar-header">
+        <a href="/admin/dashboard" class="sidebar-brand">
+          <div class="brand-icon">⚡</div>
+          <div class="brand-title-wrap">
+            <h1>BioTransit <span>OS</span></h1>
+            <small>Command Center v2.5</small>
+          </div>
+        </a>
+        <button class="sidebar-close-btn" onclick="toggleSidebar()" aria-label="Close Sidebar">✕</button>
+      </div>
+
+      <!-- Authenticated Administrator Profile Card -->
+      <div class="sidebar-profile">
+        <div class="profile-avatar" id="sidebar-admin-avatar">AD</div>
+        <div class="profile-info">
+          <div class="profile-name" id="sidebar-admin-name">Administrator</div>
+          <span class="profile-role-badge" id="sidebar-admin-role">Super Admin</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="sidebar-nav">
+        <div class="nav-section-label">Operations Core</div>
+
+        <a class="nav-item active" data-tab="dashboard" onclick="switchNavTab('dashboard')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">📊</span>
+            <span>Dashboard</span>
+          </div>
+        </a>
+
+        <a class="nav-item" data-tab="users" onclick="switchNavTab('users')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">👥</span>
+            <span>User Management</span>
+          </div>
+          <span class="nav-badge blue" id="nav-users-count">0</span>
+        </a>
+
+        <a class="nav-item" data-tab="attendance" onclick="switchNavTab('attendance')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">🕒</span>
+            <span>Attendance Hub</span>
+          </div>
+          <span class="nav-badge blue" id="nav-attendance-count">0</span>
+        </a>
+
+        <a class="nav-item" data-tab="feedback" onclick="switchNavTab('feedback')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">💬</span>
+            <span>Feedback Center</span>
+          </div>
+          <span class="nav-badge" id="nav-feedback-pending">0</span>
+        </a>
+
+        <div class="nav-section-label">Transit System &amp; Data</div>
+
+        <a class="nav-item" data-tab="data" onclick="switchNavTab('data')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">🌐</span>
+            <span>Website &amp; Stations</span>
+          </div>
+        </a>
+
+        <a class="nav-item" data-tab="audit" onclick="switchNavTab('audit')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">📜</span>
+            <span>Audit &amp; Activity Log</span>
+          </div>
+        </a>
+
+        <a class="nav-item" data-tab="reports" onclick="switchNavTab('reports')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">📈</span>
+            <span>Reports &amp; Analytics</span>
+          </div>
+        </a>
+
+        <a class="nav-item" data-tab="settings" onclick="switchNavTab('settings')">
+          <div class="nav-item-content">
+            <span class="nav-item-icon">⚙️</span>
+            <span>Fare Rules &amp; Security</span>
+          </div>
+        </a>
+      </nav>
+
+      <!-- Sidebar Footer Action Bar -->
+      <div class="sidebar-footer">
+        <a href="/" target="_blank" class="btn-sidebar-action">
+          <span>↗</span> View Public Website
+        </a>
+        <button class="btn-sidebar-action logout-btn" onclick="performAdminLogout()">
+          <span>🔒</span> Sign Out Admin
+        </button>
+      </div>
+    </aside>
+
+    <!-- ========================================================================
+         MAIN CONTENT AREA
+         ======================================================================== -->
+    <main class="admin-main">
+
+      <!-- Sticky Top Header -->
+      <header class="admin-header">
+        <div class="header-left">
+          <button class="menu-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle Menu">☰</button>
+          <div class="header-breadcrumbs">
+            <span>BioTransit</span>
+            <span>/</span>
+            <span>Admin</span>
+            <span>/</span>
+            <span class="current-crumb" id="breadcrumb-current">Dashboard</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <!-- Gate Emergency Quick Action -->
+          <button class="quick-action-pill emergency" onclick="quickEmergencyEvacuate()" title="Immediately open all turnstiles for evacuation">
+            <span>🚨</span> Emergency Open
+          </button>
+
+          <!-- Add Station Quick Action -->
+          <button class="quick-action-pill" onclick="openAddStationModal()">
+            <span>➕</span> Station
+          </button>
+
+          <!-- Add Announcement Quick Action -->
+          <button class="quick-action-pill" onclick="openAddNoticeModal()">
+            <span>📢</span> Notice
+          </button>
+
+          <!-- Dark / Light Theme Toggle -->
+          <button class="btn-icon" id="theme-toggle-btn" onclick="toggleAdminTheme()" title="Toggle Dark / Light Theme">
+            <span id="theme-icon">🌙</span>
+          </button>
+
+          <!-- Unresolved Alerts Indicator -->
+          <button class="btn-icon" onclick="switchNavTab('audit')" title="Active Security Alerts">
+            <span>⚠️</span>
+            <span class="icon-badge" id="header-alerts-badge">0</span>
+          </button>
+
+          <!-- Admin Profile Dropdown Pill -->
+          <div class="header-user-pill" onclick="switchNavTab('settings')" title="Administrator Profile &amp; Settings">
+            <div class="header-user-avatar" id="header-admin-avatar">AD</div>
+            <span class="header-user-name" id="header-admin-name">Admin</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Content Views Container -->
+      <div class="admin-content">
+
+        <!-- ====================================================================
+             TAB 1: EXECUTIVE DASHBOARD
+             ==================================================================== -->
+        <section id="pane-dashboard" class="tab-pane active">
+          
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>📊</span> Transit Command &amp; Executive Telemetry</h2>
+              <p class="page-subtitle">Real-time overview of commuters, attendance records, ridership, and transit network health.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber secondary" onclick="loadDashboardTelemetry()">
+                <span>🔄</span> Refresh Telemetry
+              </button>
+              <button class="btn-cyber" onclick="exportJourneysCsv()">
+                <span>📥</span> Export Journeys CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Top 6 Primary KPI Cards -->
+          <div class="kpi-grid">
+            <div class="kpi-card" onclick="switchNavTab('users')" style="cursor:pointer;">
+              <div class="kpi-data">
+                <div class="kpi-label">Registered Users</div>
+                <div class="kpi-value" id="kpi-total-users">0</div>
+                <div class="kpi-subtext">Verified Biometric Profiles</div>
+              </div>
+              <div class="kpi-icon-wrap cyan">👥</div>
+            </div>
+
+            <div class="kpi-card" onclick="switchNavTab('users')" style="cursor:pointer;">
+              <div class="kpi-data">
+                <div class="kpi-label">Active Users</div>
+                <div class="kpi-value" id="kpi-active-users" style="color:var(--emerald-glow);">0</div>
+                <div class="kpi-subtext">Passage Authorized</div>
+              </div>
+              <div class="kpi-icon-wrap green">✓</div>
+            </div>
+
+            <div class="kpi-card" onclick="switchNavTab('users')" style="cursor:pointer;">
+              <div class="kpi-data">
+                <div class="kpi-label">Inactive Users</div>
+                <div class="kpi-value" id="kpi-inactive-users" style="color:var(--rose-glow);">0</div>
+                <div class="kpi-subtext">Deactivated / Suspended</div>
+              </div>
+              <div class="kpi-icon-wrap rose">⛔</div>
+            </div>
+
+            <div class="kpi-card" onclick="switchNavTab('data')" style="cursor:pointer;">
+              <div class="kpi-data">
+                <div class="kpi-label">Website Content &amp; Nodes</div>
+                <div class="kpi-value" id="kpi-total-listings">0</div>
+                <div class="kpi-subtext" id="kpi-listings-sub">0 Stations · 0 Notices</div>
+              </div>
+              <div class="kpi-icon-wrap purple">🌐</div>
+            </div>
+
+            <div class="kpi-card" onclick="switchNavTab('feedback')" style="cursor:pointer;">
+              <div class="kpi-data">
+                <div class="kpi-label">Feedback Submissions</div>
+                <div class="kpi-value" id="kpi-total-feedback">0</div>
+                <div class="kpi-subtext" id="kpi-feedback-sub" style="color:var(--amber-glow);">0 Pending Reply</div>
+              </div>
+              <div class="kpi-icon-wrap amber">💬</div>
+            </div>
+
+            <div class="kpi-card" onclick="switchNavTab('attendance')" style="cursor:pointer;">
+              <div class="kpi-data">
+                <div class="kpi-label">Attendance Records</div>
+                <div class="kpi-value" id="kpi-total-attendance">0</div>
+                <div class="kpi-subtext" id="kpi-attendance-sub">0 Logged Today</div>
+              </div>
+              <div class="kpi-icon-wrap blue">🕒</div>
+            </div>
+          </div>
+
+          <!-- Secondary Operational KPI Strip -->
+          <div class="secondary-kpi-strip">
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">💰</span>
+              <div class="metric-pill-info">
+                <small>Transit Revenue</small>
+                <strong id="kpi-total-revenue">₹ 0.00</strong>
+              </div>
+            </div>
+
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">🚇</span>
+              <div class="metric-pill-info">
+                <small>In-Transit Now</small>
+                <strong id="kpi-open-journeys">0 Commuters</strong>
+              </div>
+            </div>
+
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">⚠️</span>
+              <div class="metric-pill-info">
+                <small>Security Alerts</small>
+                <strong id="kpi-active-alerts" style="color:var(--rose-glow);">0 Active</strong>
+              </div>
+            </div>
+
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">🚆</span>
+              <div class="metric-pill-info">
+                <small>Total Journeys</small>
+                <strong id="kpi-total-journeys">0 Trips</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Turnstile Gate Remote Override Console -->
+          <div class="gate-override-box">
+            <div class="gate-override-title-wrap">
+              <h3><span>⚡</span> Central Turnstile Gate Override Protocol</h3>
+              <p>Remote command broadcast to all biometric gates across Pune Metro, Bus, and Suburban train terminals.</p>
+            </div>
+            <div class="override-btn-group">
+              <button class="override-btn normal" id="btn-gate-normal" onclick="applyGateOverrideMode('normal')">
+                <span>🟢</span> Normal AI Operation
+              </button>
+              <button class="override-btn emergency" id="btn-gate-emergency" onclick="applyGateOverrideMode('emergency_open')">
+                <span>🚨</span> Emergency Evac (All Open)
+              </button>
+              <button class="override-btn lockdown" id="btn-gate-lockdown" onclick="applyGateOverrideMode('lockdown')">
+                <span>🔒</span> Security Lockdown (All Closed)
+              </button>
+            </div>
+          </div>
+
+          <!-- Interactive Graphical Charts Grid -->
+          <div class="two-col-grid">
+            <div class="content-card">
+              <div class="card-header-flex">
+                <h3 class="card-title"><span>📈</span> Ridership &amp; Attendance Trend (7-Day)</h3>
+                <span class="category-tag resident">PASSENGER FLOW</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-attendance-trend"></canvas>
+              </div>
+            </div>
+
+            <div class="content-card">
+              <div class="card-header-flex">
+                <h3 class="card-title"><span>🚊</span> Transit Mode Ridership Distribution</h3>
+                <span class="category-tag metro">MULTIMODAL</span>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-mode-distribution"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2-Column: Recent Registrations & Top Busiest Hubs -->
+          <div class="two-col-grid">
+            <div class="content-card">
+              <div class="card-header-flex">
+                <h3 class="card-title"><span>👤</span> Recent Commuter Registrations</h3>
+                <button class="btn-table-action" onclick="switchNavTab('users')">View All →</button>
+              </div>
+              <div class="table-responsive">
+                <table class="cyber-table" id="table-recent-users">
+                  <thead>
+                    <tr>
+                      <th>Commuter</th>
+                      <th>Category</th>
+                      <th>Wallet</th>
+                      <th>Status</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="content-card">
+              <div class="card-header-flex">
+                <h3 class="card-title"><span>🚆</span> Top Busiest Transit Hubs</h3>
+                <span class="category-tag tourist">FOOT TRAFFIC</span>
+              </div>
+              <div class="table-responsive">
+                <table class="cyber-table" id="table-busiest-hubs">
+                  <thead>
+                    <tr>
+                      <th>Station</th>
+                      <th>Mode</th>
+                      <th>Fare Zone</th>
+                      <th>Passenger Traffic</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 2: USER MANAGEMENT
+             ==================================================================== -->
+        <section id="pane-users" class="tab-pane">
+          
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>👥</span> Commuter &amp; User Directory</h2>
+              <p class="page-subtitle">Manage registered commuters, biometric credentials, wallet balances, and account status.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber secondary" onclick="exportUsersCsv()">
+                <span>📥</span> Export Commuters CSV
+              </button>
+              <button class="btn-cyber" onclick="openAddUserModal()">
+                <span>➕</span> Register New User
+              </button>
+            </div>
+          </div>
+
+          <!-- User Filters & Search Bar -->
+          <div class="filter-bar">
+            <div class="filter-group-left">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input 
+                  id="user-search-input" 
+                  type="text" 
+                  class="search-input" 
+                  placeholder="Search by name, email, phone number, or ID..." 
+                  oninput="handleUserSearchInput()"
+                >
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+              <div class="filter-pills">
+                <button class="filter-pill active" onclick="filterUserStatus('all', this)">All Status</button>
+                <button class="filter-pill" onclick="filterUserStatus('active', this)">Active Only</button>
+                <button class="filter-pill" onclick="filterUserStatus('inactive', this)">Inactive Only</button>
+              </div>
+
+              <div class="filter-pills">
+                <button class="filter-pill active" onclick="filterUserKind('all', this)">All Categories</button>
+                <button class="filter-pill" onclick="filterUserKind('resident', this)">Residents</button>
+                <button class="filter-pill" onclick="filterUserKind('tourist', this)">Tourists</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Users Table -->
+          <div class="table-responsive">
+            <table class="cyber-table" id="table-users-list">
+              <thead>
+                <tr>
+                  <th>Commuter</th>
+                  <th>Contact Info</th>
+                  <th>Category</th>
+                  <th>Wallet Balance</th>
+                  <th>Tourist Pass</th>
+                  <th>Account Status</th>
+                  <th>Enrolled Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 3: ATTENDANCE MANAGEMENT
+             ==================================================================== -->
+        <section id="pane-attendance" class="tab-pane">
+
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>🕒</span> Commuter Attendance &amp; Check-In Hub</h2>
+              <p class="page-subtitle">Track biometric turnstile gate attendance, commuter frequency, and compliance percentages.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber secondary" onclick="exportAttendanceCsv()">
+                <span>📥</span> Export Attendance CSV
+              </button>
+              <button class="btn-cyber" onclick="openMarkAttendanceModal()">
+                <span>➕</span> Mark Manual Attendance
+              </button>
+            </div>
+          </div>
+
+          <!-- Attendance Stats Banner -->
+          <div class="secondary-kpi-strip">
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">📋</span>
+              <div class="metric-pill-info">
+                <small>Total Gate Check-ins</small>
+                <strong id="att-stats-total">0</strong>
+              </div>
+            </div>
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">📅</span>
+              <div class="metric-pill-info">
+                <small>Operational Days</small>
+                <strong id="att-stats-days">0 Days</strong>
+              </div>
+            </div>
+            <div class="metric-pill-card">
+              <span class="metric-pill-icon">📈</span>
+              <div class="metric-pill-info">
+                <small>Overall Attendance Rate</small>
+                <strong id="att-stats-rate" style="color:var(--emerald-glow);">0%</strong>
+              </div>
+            </div>
+          </div>
+
+          <!-- Commuter Attendance Compliance Table -->
+          <div class="content-card" style="margin-bottom:1.5rem;">
+            <div class="card-header-flex">
+              <h3 class="card-title"><span>📊</span> Commuter Attendance Compliance &amp; Percentage</h3>
+              <span class="category-tag resident">FREQUENCY ANALYSIS</span>
+            </div>
+            <div class="table-responsive">
+              <table class="cyber-table" id="table-user-attendance-stats">
+                <thead>
+                  <tr>
+                    <th>Commuter</th>
+                    <th>Category</th>
+                    <th>Days Present</th>
+                    <th>Total Check-ins</th>
+                    <th>Attendance Compliance (%)</th>
+                    <th>Account Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Filter Bar for Raw Attendance Logs -->
+          <div class="filter-bar">
+            <div class="filter-group-left">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input 
+                  id="att-search-input" 
+                  type="text" 
+                  class="search-input" 
+                  placeholder="Filter attendance by commuter name, email..."
+                  oninput="loadAttendanceRecords()"
+                >
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <select id="att-station-filter" class="filter-select" onchange="loadAttendanceRecords()">
+                <option value="all">All Stations</option>
+              </select>
+
+              <select id="att-status-filter" class="filter-select" onchange="loadAttendanceRecords()">
+                <option value="all">All Statuses</option>
+                <option value="Completed">Completed</option>
+                <option value="In-Transit">In-Transit</option>
+                <option value="Present">Present</option>
+              </select>
+
+              <input id="att-date-filter" type="date" class="filter-select" onchange="loadAttendanceRecords()">
+
+              <button class="btn-table-action" onclick="resetAttendanceFilters()">Reset</button>
+            </div>
+          </div>
+
+          <!-- Detailed Attendance Records Table -->
+          <div class="table-responsive">
+            <table class="cyber-table" id="table-attendance-records">
+              <thead>
+                <tr>
+                  <th>Record ID</th>
+                  <th>Commuter</th>
+                  <th>Station &amp; Corridor</th>
+                  <th>Date</th>
+                  <th>Check-In Time</th>
+                  <th>Check-Out Time</th>
+                  <th>Status</th>
+                  <th>Method</th>
+                  <th>Notes</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 4: FEEDBACK MANAGEMENT
+             ==================================================================== -->
+        <section id="pane-feedback" class="tab-pane">
+
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>💬</span> Commuter Feedback &amp; Support Inquiries</h2>
+              <p class="page-subtitle">Review passenger feedback, respond directly to inquiries, and moderate website reviews.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber secondary" onclick="exportFeedbackCsv()">
+                <span>📥</span> Export Feedback CSV
+              </button>
+            </div>
+          </div>
+
+          <!-- Feedback Filters -->
+          <div class="filter-bar">
+            <div class="filter-group-left">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input 
+                  id="feedback-search-input" 
+                  type="text" 
+                  class="search-input" 
+                  placeholder="Search feedback subject, message, or commuter name..."
+                  oninput="loadFeedbackRecords()"
+                >
+              </div>
+            </div>
+
+            <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+              <select id="feedback-cat-filter" class="filter-select" onchange="loadFeedbackRecords()">
+                <option value="all">All Categories</option>
+                <option value="General">General</option>
+                <option value="Gate Issue">Gate Issue</option>
+                <option value="Payment">Payment</option>
+                <option value="Suggestion">Suggestion</option>
+                <option value="Transit Bug">Transit Bug</option>
+              </select>
+
+              <select id="feedback-rating-filter" class="filter-select" onchange="loadFeedbackRecords()">
+                <option value="all">All Ratings</option>
+                <option value="5">★★★★★ (5 Stars)</option>
+                <option value="4">★★★★☆ (4 Stars)</option>
+                <option value="3">★★★☆☆ (3 Stars)</option>
+                <option value="2">★★☆☆☆ (2 Stars)</option>
+                <option value="1">★☆☆☆☆ (1 Star)</option>
+              </select>
+
+              <select id="feedback-status-filter" class="filter-select" onchange="loadFeedbackRecords()">
+                <option value="all">All Statuses</option>
+                <option value="new">Pending / New</option>
+                <option value="replied">Replied</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Feedback Table -->
+          <div class="table-responsive">
+            <table class="cyber-table" id="table-feedback-list">
+              <thead>
+                <tr>
+                  <th>Commuter</th>
+                  <th>Rating</th>
+                  <th>Category</th>
+                  <th>Subject &amp; Message</th>
+                  <th>Status</th>
+                  <th>Submitted At</th>
+                  <th>Admin Reply</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 5: WEBSITE DATA & STATIONS MANAGEMENT
+             ==================================================================== -->
+        <section id="pane-data" class="tab-pane">
+
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>🌐</span> Transit Grid Stations &amp; Website Content</h2>
+              <p class="page-subtitle">Configure public transit stations, multimodal corridors, announcements, and data exports.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber" onclick="openAddStationModal()">
+                <span>➕</span> Add Station
+              </button>
+              <button class="btn-cyber secondary" onclick="openAddNoticeModal()">
+                <span>📢</span> Post Notice
+              </button>
+            </div>
+          </div>
+
+          <!-- Station Corridors Grid -->
+          <div class="content-card" style="margin-bottom:1.5rem;">
+            <div class="card-header-flex">
+              <h3 class="card-title"><span>🚆</span> Pune Transit Stations Corridor Matrix</h3>
+              <span class="category-tag metro">LIVE INFRASTRUCTURE</span>
+            </div>
+            <div class="table-responsive">
+              <table class="cyber-table" id="table-admin-stations">
+                <thead>
+                  <tr>
+                    <th>Station Name</th>
+                    <th>Transit Mode</th>
+                    <th>Fare Zone</th>
+                    <th>Total Traffic</th>
+                    <th>Fares Collected</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Website Announcements & Notice Board CMS -->
+          <div class="content-card" style="margin-bottom:1.5rem;">
+            <div class="card-header-flex">
+              <h3 class="card-title"><span>📢</span> Website Announcements &amp; Passenger Advisories</h3>
+              <button class="btn-table-action" onclick="openAddNoticeModal()">➕ New Announcement</button>
+            </div>
+            <div class="table-responsive">
+              <table class="cyber-table" id="table-admin-notices">
+                <thead>
+                  <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Content Preview</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Published At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Live Passenger Activity Stream -->
+          <div class="content-card" style="margin-bottom:1.5rem;">
+            <div class="card-header-flex">
+              <h3 class="card-title"><span>⚡</span> Live Passenger Activity &amp; Transaction Stream</h3>
+              <button class="btn-table-action" onclick="loadLiveActivities()">🔄 Refresh Stream</button>
+            </div>
+            <div class="table-responsive">
+              <table class="cyber-table" id="table-activity-stream">
+                <thead>
+                  <tr>
+                    <th>Type</th>
+                    <th>Passenger</th>
+                    <th>Activity Detail</th>
+                    <th>Amount / Status</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Data Export Center -->
+          <div class="content-card">
+            <div class="card-header-flex">
+              <h3 class="card-title"><span>📥</span> Central Transit Data Export Center</h3>
+              <span class="category-tag train">CSV / EXCEL READY</span>
+            </div>
+            <p style="font-size:0.84rem; color:var(--text-muted); margin-bottom:1rem;">
+              Download real, unfiltered snapshots of system data for compliance, auditing, and analytics.
+            </p>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+              <button class="btn-cyber secondary" onclick="exportUsersCsv()">
+                <span>👥</span> Export Commuters
+              </button>
+              <button class="btn-cyber secondary" onclick="exportAttendanceCsv()">
+                <span>🕒</span> Export Attendance
+              </button>
+              <button class="btn-cyber secondary" onclick="exportJourneysCsv()">
+                <span>🚆</span> Export Journeys
+              </button>
+              <button class="btn-cyber secondary" onclick="exportFeedbackCsv()">
+                <span>💬</span> Export Feedback
+              </button>
+              <button class="btn-cyber secondary" onclick="exportAuditLogsCsv()">
+                <span>📜</span> Export Audit Logs
+              </button>
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 6: AUDIT & ACTIVITY LOGS
+             ==================================================================== -->
+        <section id="pane-audit" class="tab-pane">
+
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>📜</span> Administrative Audit Trail &amp; System Logs</h2>
+              <p class="page-subtitle">Immutable security ledger recording every administrative operation, login, and configuration change.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber secondary" onclick="exportAuditLogsCsv()">
+                <span>📥</span> Export Audit Logs CSV
+              </button>
+              <button class="btn-cyber secondary" onclick="loadAuditLogs()">
+                <span>🔄</span> Refresh Logs
+              </button>
+            </div>
+          </div>
+
+          <!-- Audit Log Filters -->
+          <div class="filter-bar">
+            <div class="filter-group-left">
+              <div class="search-input-wrapper">
+                <span class="search-icon">🔍</span>
+                <input 
+                  id="audit-search-input" 
+                  type="text" 
+                  class="search-input" 
+                  placeholder="Search by admin name, action, details..."
+                  oninput="loadAuditLogs()"
+                >
+              </div>
+            </div>
+
+            <div>
+              <select id="audit-action-filter" class="filter-select" onchange="loadAuditLogs()">
+                <option value="all">All Actions</option>
+                <!-- Injected via JS -->
+              </select>
+            </div>
+          </div>
+
+          <!-- Audit Logs Table -->
+          <div class="table-responsive">
+            <table class="cyber-table" id="table-audit-logs">
+              <thead>
+                <tr>
+                  <th>Log ID</th>
+                  <th>Timestamp</th>
+                  <th>Administrator</th>
+                  <th>Action</th>
+                  <th>Target</th>
+                  <th>Operation Details</th>
+                  <th>IP Address</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 7: REPORTS & ANALYTICS
+             ==================================================================== -->
+        <section id="pane-reports" class="tab-pane">
+
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>📈</span> Transit Operations &amp; Intelligence Reports</h2>
+              <p class="page-subtitle">Generate aggregated Daily, Weekly, and Monthly reports on passenger volume, revenue, and attendance.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber" onclick="printReportCard()">
+                <span>🖨️</span> Print / Save Report
+              </button>
+            </div>
+          </div>
+
+          <!-- Period Selector Bar -->
+          <div class="filter-bar" style="margin-bottom:1.5rem;">
+            <div class="filter-pills">
+              <button class="filter-pill active" id="btn-period-daily" onclick="loadReportPeriod('daily', this)">
+                📅 Daily Report
+              </button>
+              <button class="filter-pill" id="btn-period-weekly" onclick="loadReportPeriod('weekly', this)">
+                📊 Weekly Report (Last 7 Days)
+              </button>
+              <button class="filter-pill" id="btn-period-monthly" onclick="loadReportPeriod('monthly', this)">
+                📈 Monthly Summary (Last 30 Days)
+              </button>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-dim); font-family:var(--font-mono);" id="report-timestamp-pill">
+              Generated: Just now
+            </div>
+          </div>
+
+          <!-- Printable Report Container -->
+          <div id="printable-report-area">
+            <div class="content-card" style="margin-bottom:1.5rem;">
+              <div class="card-header-flex">
+                <div>
+                  <h3 class="card-title" id="report-title-text">Daily Transit Operations Report</h3>
+                  <small style="color:var(--text-dim); font-family:var(--font-mono);" id="report-subtitle-text">Pune Biometric Transit Authority</small>
+                </div>
+                <span class="status-badge completed">OFFICIAL REPORT</span>
+              </div>
+
+              <!-- Report Metrics Grid -->
+              <div class="kpi-grid" style="margin-top:1rem;">
+                <div class="kpi-card">
+                  <div class="kpi-data">
+                    <div class="kpi-label">Completed Trips</div>
+                    <div class="kpi-value" id="rep-trips">0</div>
+                    <div class="kpi-subtext" id="rep-trips-sub">Turnstile passages</div>
+                  </div>
+                  <div class="kpi-icon-wrap cyan">🚆</div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-data">
+                    <div class="kpi-label">Total Revenue</div>
+                    <div class="kpi-value" id="rep-revenue">₹ 0.00</div>
+                    <div class="kpi-subtext" id="rep-rev-sub">Fares &amp; Passes</div>
+                  </div>
+                  <div class="kpi-icon-wrap green">💰</div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-data">
+                    <div class="kpi-label">Attendance Records</div>
+                    <div class="kpi-value" id="rep-attendance">0</div>
+                    <div class="kpi-subtext" id="rep-att-sub">Unique Commuters</div>
+                  </div>
+                  <div class="kpi-icon-wrap purple">🕒</div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-data">
+                    <div class="kpi-label">New Commuters</div>
+                    <div class="kpi-value" id="rep-users">0</div>
+                    <div class="kpi-subtext">Biometric Enrollments</div>
+                  </div>
+                  <div class="kpi-icon-wrap amber">👥</div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-data">
+                    <div class="kpi-label">Commuter Satisfaction</div>
+                    <div class="kpi-value" id="rep-satisfaction" style="color:var(--emerald-glow);">5.0 ★</div>
+                    <div class="kpi-subtext" id="rep-feedback-sub">Based on reviews</div>
+                  </div>
+                  <div class="kpi-icon-wrap rose">⭐</div>
+                </div>
+              </div>
+
+              <!-- Modal Split Breakdown in Report -->
+              <div style="margin-top:1.5rem;">
+                <h4 style="font-family:var(--font-display); font-size:1rem; margin-bottom:0.75rem;">
+                  Multimodal Transit Flow Breakdown
+                </h4>
+                <div class="table-responsive">
+                  <table class="cyber-table" id="table-report-modal">
+                    <thead>
+                      <tr>
+                        <th>Transit Mode</th>
+                        <th>Trips Logged</th>
+                        <th>Revenue Generated</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <!-- Injected via JS -->
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </section>
+
+
+        <!-- ====================================================================
+             TAB 8: FARE RULES & SETTINGS
+             ==================================================================== -->
+        <section id="pane-settings" class="tab-pane">
+
+          <div class="page-header">
+            <div>
+              <h2 class="page-title"><span>⚙️</span> Fare Rules, Security &amp; Transit Engine</h2>
+              <p class="page-subtitle">Configure zone fare computation, anti-passback security intervals, and administrator credentials.</p>
+            </div>
+            <div class="page-actions">
+              <button class="btn-cyber emerald" onclick="saveFareSettingsAction()">
+                <span>💾</span> Save Fare Rules
+              </button>
+            </div>
+          </div>
+
+          <div class="two-col-grid">
+            <!-- Fare Calculation Matrix Card -->
+            <div class="content-card">
+              <div class="card-header-flex">
+                <h3 class="card-title"><span>💰</span> Dynamic Fare Calculation Matrix</h3>
+                <span class="category-tag resident">FARE FORMULA</span>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                Zone Fare Engine: <code>Fare = Base_Fare + Per_Zone × |Zone_Entry - Zone_Exit|</code>
+              </p>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-base-fare">Base Transit Fare (₹)</label>
+                <input id="setting-base-fare" type="number" step="1" class="form-input" value="10">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-per-zone">Per-Zone Rate Increment (₹)</label>
+                <input id="setting-per-zone" type="number" step="1" class="form-input" value="5">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-min-balance">Minimum Wallet Balance for Gate Authorization (₹)</label>
+                <input id="setting-min-balance" type="number" step="1" class="form-input" value="10">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-antipassback">Anti-Passback Fraud Cooldown (seconds)</label>
+                <input id="setting-antipassback" type="number" step="1" class="form-input" value="20">
+              </div>
+
+              <button class="btn-cyber emerald" onclick="saveFareSettingsAction()" style="width:100%; margin-top:0.5rem;">
+                <span>💾</span> Apply Fare &amp; Security Rules
+              </button>
+            </div>
+
+            <!-- Admin Credentials & Maintenance Card -->
+            <div class="content-card">
+              <div class="card-header-flex">
+                <h3 class="card-title"><span>🔐</span> Security Credentials &amp; Utilities</h3>
+                <span class="category-tag tourist">ACCESS CONTROL</span>
+              </div>
+              <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1.5rem;">
+                Manage administrator master password and test environment balances.
+              </p>
+
+              <div class="form-group">
+                <label class="form-label" for="setting-admin-key">Update Master Admin Key</label>
+                <input id="setting-admin-key" type="password" class="form-input" placeholder="Enter new secret key (min 4 characters)">
+              </div>
+
+              <button class="btn-cyber" onclick="updateAdminKeyAction()" style="width:100%; margin-bottom:2rem;">
+                <span>🔑</span> Update Secret Access Key
+              </button>
+
+              <div style="padding-top:1.25rem; border-top:1px solid var(--border-subtle);">
+                <h4 style="font-family:var(--font-display); font-size:1rem; margin-bottom:0.4rem;">
+                  Demo Testing Utilities
+                </h4>
+                <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:1rem;">
+                  Quickly top-up all test commuter wallets by ₹200 for live biometric turnstile demonstrations.
+                </p>
+                <button class="btn-cyber secondary" onclick="rechargeAllDemoWallets()" style="width:100%;">
+                  <span>⚡</span> Top-Up All Commuter Wallets (+₹200)
+                </button>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Dynamic Modal Dialog Host Container -->
+  <div id="modal-host"></div>
+
+  <!-- Toast Notifications Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Admin Controller Application Script -->
+  <script src="admin.js"></script>
+</body>
+</html>

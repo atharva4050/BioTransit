@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Authorization - BioTransit AI Command Center</title>
+  <meta name="description" content="Secure administrative gateway for Pune Biometric Transit Authority Command Center.">
+
+  <!-- Modern Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-dark: #070b14;
+      --bg-card: rgba(13, 20, 36, 0.85);
+      --border-glow: rgba(6, 182, 212, 0.35);
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --cyan: #06b6d4;
+      --cyan-bright: #22d3ee;
+      --purple: #8b5cf6;
+      --emerald: #10b981;
+      --rose: #f43f5e;
+      --amber: #f59e0b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 20%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 85% 75%, rgba(139, 92, 246, 0.15) 0%, transparent 45%),
+        linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient animated grid lines */
+    .grid-glow-orb {
+      position: absolute;
+      width: 500px;
+      height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(6, 182, 212, 0.15) 0%, transparent 70%);
+      pointer-events: none;
+      filter: blur(60px);
+      animation: floatOrb 12s ease-in-out infinite alternate;
+    }
+
+    @keyframes floatOrb {
+      0% { transform: translate(-30%, -20%) scale(1); }
+      100% { transform: translate(30%, 20%) scale(1.15); }
+    }
+
+    .login-container {
+      width: 100%;
+      max-width: 460px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .brand-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .brand-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      background: rgba(6, 182, 212, 0.12);
+      border: 1px solid var(--border-glow);
+      font-size: 0.75rem;
+      font-family: var(--font-mono);
+      color: var(--cyan-bright);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 1rem;
+    }
+
+    .brand-badge-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--cyan-bright);
+      box-shadow: 0 0 8px var(--cyan-bright);
+      animation: pulseDot 2s infinite;
+    }
+
+    @keyframes pulseDot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    .brand-title {
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+    }
+
+    .brand-title span {
+      background: linear-gradient(135deg, var(--cyan-bright), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-subtext {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      margin-top: 0.35rem;
+    }
+
+    /* Login Card */
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glow);
+      border-radius: 18px;
+      padding: 2.25rem 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(6, 182, 212, 0.1);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .form-heading {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 0.35rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-subheading {
+      color: var(--text-muted);
+      font-size: 0.82rem;
+      margin-bottom: 1.75rem;
+    }
+
+    /* Alert Banner */
+    .alert-banner {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      margin-bottom: 1.25rem;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .alert-banner.error {
+      display: flex;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.4);
+      color: #fda4af;
+    }
+
+    .alert-banner.success {
+      display: flex;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Form Fields */
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 0.45rem;
+      font-family: var(--font-mono);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .field-icon {
+      position: absolute;
+      left: 1rem;
+      font-size: 1rem;
+      color: var(--text-dim);
+      pointer-events: none;
+    }
+
+    .cyber-input {
+      width: 100%;
+      background: rgba(10, 15, 28, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 10px;
+      padding: 0.85rem 1rem 0.85rem 2.75rem;
+      color: #fff;
+      font-family: var(--font-sans);
+      font-size: 0.92rem;
+      transition: all 0.2s ease;
+      outline: none;
+    }
+
+    .cyber-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+      background: rgba(12, 20, 36, 0.95);
+    }
+
+    .toggle-password-btn {
+      position: absolute;
+      right: 0.85rem;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 1.1rem;
+      padding: 0.25rem;
+      transition: color 0.2s;
+    }
+
+    .toggle-password-btn:hover {
+      color: var(--text-main);
+    }
+
+    /* Submit Button */
+    .btn-submit {
+      width: 100%;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border: none;
+      border-radius: 10px;
+      color: #fff;
+      font-family: var(--font-display);
+      font-size: 1rem;
+      font-weight: 700;
+      padding: 0.95rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      box-shadow: 0 10px 25px -5px rgba(6, 182, 212, 0.4);
+      transition: all 0.25s ease;
+      margin-top: 1.5rem;
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 30px -5px rgba(6, 182, 212, 0.55);
+      background: linear-gradient(135deg, #22d3ee, #60a5fa);
+    }
+
+    .btn-submit:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Demo Credentials Card */
+    .demo-credentials-card {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px dashed rgba(6, 182, 212, 0.35);
+      border-radius: 12px;
+      font-size: 0.8rem;
+    }
+
+    .demo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.6rem;
+      color: var(--cyan-bright);
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    .demo-creds-row {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      font-family: var(--font-mono);
+    }
+
+    .demo-creds-row strong {
+      color: #fff;
+      font-weight: 500;
+    }
+
+    .btn-quick-fill {
+      background: rgba(6, 182, 212, 0.15);
+      border: 1px solid var(--cyan);
+      color: var(--cyan-bright);
+      padding: 0.3rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.72rem;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-quick-fill:hover {
+      background: var(--cyan);
+      color: #070b14;
+    }
+
+    /* Footer Navigation */
+    .login-footer {
+      text-align: center;
+      margin-top: 1.75rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.84rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--cyan-bright);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="grid-glow-orb"></div>
+
+  <div class="login-container">
+    
+    <!-- Branding Header -->
+    <div class="brand-header">
+      <div class="brand-badge">
+        <span class="brand-badge-dot"></span>
+        RESTRICTED LEVEL 4 GATEWAY
+      </div>
+      <h1 class="brand-title">
+        BioTransit <span>Admin OS</span>
+      </h1>
+      <p class="brand-subtext">Pune Biometric Transit Authority Command Center</p>
+    </div>
+
+    <!-- Login Box -->
+    <div class="login-card">
+      <div class="form-heading">
+        <span>🛡️</span> Security Credentials
+      </div>
+      <p class="form-subheading">Sign in with authorized administrative email and security key.</p>
+
+      <!-- Alert Message Box -->
+      <div id="alert-box" class="alert-banner">
+        <span id="alert-icon">⚠️</span>
+        <span id="alert-text">Invalid login credentials.</span>
+      </div>
+
+      <form id="admin-login-form" onsubmit="handleAdminLogin(event)">
+        <div class="field-group">
+          <label class="field-label" for="admin-email">Admin Email Address</label>
+          <div class="input-wrapper">
+            <span class="field-icon">📧</span>
+            <input 
+              id="admin-email" 
+              type="email" 
+              class="cyber-input" 
+              placeholder="admin@biotransit.com" 
+              value="admin@biotransit.com"
+              required 
+              autocomplete="email"
+            >
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="admin-password">Administrative Password</label>
+          <div class="input-wrapper">
+            <span class="field-icon">🔐</span>
+            <input 
+              id="admin-password" 
+              type="password" 
+              class="cyber-input" 
+              placeholder="Enter password..." 
+              value="admin123"
+              required 
+              autocomplete="current-password"
+            >
+            <button type="button" class="toggle-password-btn" onclick="togglePasswordVisibility()" title="Toggle visibility">
+              <span id="eye-icon">👁️</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="btn-submit">
+          <span id="btn-submit-text">Authorize &amp; Launch Dashboard</span>
+          <span id="btn-submit-arrow">➔</span>
+        </button>
+      </form>
+
+      <!-- Quick Fill Credentials -->
+      <div class="demo-credentials-card">
+        <div class="demo-header">
+          <span>⚡ DEFAULT ADMINISTRATOR ACCOUNT</span>
+          <button type="button" class="btn-quick-fill" onclick="quickFillCredentials()">Auto-fill</button>
+        </div>
+        <div class="demo-creds-row">
+          <span>Email:</span>
+          <strong>admin@biotransit.com</strong>
+        </div>
+        <div class="demo-creds-row">
+          <span>Password:</span>
+          <strong>admin123</strong>
+        </div>
+        <div class="demo-creds-row">
+          <span>Access Level:</span>
+          <strong style="color:var(--emerald);">Super Administrator (Full Rights)</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Back to Site Link -->
+    <div class="login-footer">
+      <a href="/" class="back-link">
+        <span>←</span> Return to BioTransit Public Portal
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // Check if already authenticated; if so, verify token and forward to dashboard
+    document.addEventListener("DOMContentLoaded", async () => {
+      const token = localStorage.getItem("biotransit_admin_token");
+      if (token) {
+        try {
+          const res = await fetch("/api/admin/me", {
+            headers: { "Authorization": `Bearer ${token}` }
+          });
+          const data = await res.json();
+          if (data.ok && data.admin) {
+            window.location.replace("/admin/dashboard");
+          }
+        } catch (e) {
+          localStorage.removeItem("biotransit_admin_token");
+        }
+      }
+    });
+
+    function togglePasswordVisibility() {
+      const input = document.getElementById("admin-password");
+      const icon = document.getElementById("eye-icon");
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "🙈";
+      } else {
+        input.type = "password";
+        icon.textContent = "👁️";
+      }
+    }
+
+    function quickFillCredentials() {
+      document.getElementById("admin-email").value = "admin@biotransit.com";
+      document.getElementById("admin-password").value = "admin123";
+      showAlert("Demo admin credentials auto-filled. Click 'Authorize & Launch Dashboard'.", "success");
+    }
+
+    function showAlert(msg, type = "error") {
+      const box = document.getElementById("alert-box");
+      const text = document.getElementById("alert-text");
+      const icon = document.getElementById("alert-icon");
+      
+      box.className = `alert-banner ${type}`;
+      text.textContent = msg;
+      icon.textContent = type === "error" ? "⚠️" : "✓";
+      box.style.display = "flex";
+    }
+
+    async function handleAdminLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("admin-email").value.trim();
+      const password = document.getElementById("admin-password").value;
+      const btn = document.getElementById("btn-login-submit");
+      const btnText = document.getElementById("btn-submit-text");
+      const btnArrow = document.getElementById("btn-submit-arrow");
+
+      if (!email || !password) {
+        showAlert("Please enter both email and password.", "error");
+        return;
+      }
+
+      // Show loading spinner
+      btn.disabled = true;
+      btnText.innerHTML = `<div class="spinner"></div> Authenticating...`;
+      btnArrow.style.display = "none";
+
+      try {
+        const response = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+
+        const data = await response.json();
+
+        if (data.ok && data.token) {
+          showAlert("Authentication successful! Redirecting...", "success");
+          localStorage.setItem("biotransit_admin_token", data.token);
+          localStorage.setItem("biotransit_admin_user", JSON.stringify(data.admin));
+          setTimeout(() => {
+            window.location.replace("/admin/dashboard");
+          }, 600);
+        } else {
+          showAlert(data.msg || "Invalid credentials or unauthorized account.", "error");
+          btn.disabled = false;
+          btnText.textContent = "Authorize & Launch Dashboard";
+          btnArrow.style.display = "inline";
+        }
+      } catch (err) {
+        showAlert("Failed to connect to transit auth server. Please ensure backend is running.", "error");
+        btn.disabled = false;
+        btnText.textContent = "Authorize & Launch Dashboard";
+        btnArrow.style.display = "inline";
+      }
+    }
+  </script>
+</body>
+</html>

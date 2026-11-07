@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioTransit AI - Unified Biometric Mass Transit System</title>
+  <meta name="description" content="Next-generation touchless public transit management featuring real-time Three.js 3D turnstiles, biometric facial verification, holographic passenger smartcards, and security command center.">
+  
+  <!-- Modern Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Face API & Three.js Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.13/dist/face-api.js"></script>
+  
+  <!-- Custom Cyber Transit Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient Animated Particle Background -->
+  <canvas id="bg-particles-canvas"></canvas>
+
+  <!-- Application Header -->
+  <header class="app-header">
+    <div class="brand-wrapper">
+      <div class="brand-icon-mesh">⚡</div>
+      <div>
+        <div style="display:flex; align-items:center;">
+          <span class="brand-title">BioTransit</span>
+          <span class="brand-badge">AI v2.5</span>
+        </div>
+        <div style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">
+          Pune Biometric Mass Transit Grid
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Bar -->
+    <nav class="main-nav" id="main-nav">
+      <button data-v="gate" class="on"><span>🚀</span> Live Gate</button>
+      <button data-v="register"><span>👤</span> Register</button>
+      <button data-v="me"><span>💳</span> My Account</button>
+      <button data-v="network"><span>🗺️</span> Network Map</button>
+      <button data-v="feedback"><span>💬</span> Feedback</button>
+      <a href="/admin/login" target="_blank" class="nav-admin-link"><span>🛡️</span> Admin Portal ↗</a>
+    </nav>
+
+    <!-- Header Status & Audio Controls -->
+    <div class="header-actions">
+      <div class="status-indicator">
+        <span class="status-dot" id="system-status-dot"></span>
+        <span id="system-status-text">Connecting AI Core...</span>
+      </div>
+      <button class="btn-icon" id="sound-toggle-btn" title="Toggle Sound FX">🔊</button>
+      <a href="/admin/dashboard" target="_blank" class="btn-icon" title="Launch Dedicated Admin Control Panel" style="text-decoration:none; display:flex; align-items:center; justify-content:center; color:#fff; font-size:1.05rem; border:1px solid var(--border-glow); background:rgba(6,182,212,0.15);">🛡️</a>
+    </div>
+  </header>
+
+  <!-- Hero Visual Showcase Banner -->
+  <section class="hero-banner">
+    <div class="hero-card">
+      <img src="assets/hero.jpg" alt="Futuristic Metro Station" class="hero-bg-img">
+      <div class="hero-overlay"></div>
+      <div class="hero-content">
+        <div class="hero-tag">
+          <span>●</span> Autonomous Biometric Gates · Pune Transit Authority
+        </div>
+        <h1 class="hero-heading">
+          Zero Physical Tickets.<br>
+          <span>Walk Through With AI.</span>
+        </h1>
+        <p class="hero-subtext">
+          Seamless, touchless public transit powered by 128-dimensional biometric facial vectors. Step into the gate, get recognized in milliseconds, and travel without friction across Metro, Bus, and Suburban Train lines.
+        </p>
+        <div class="hero-stats-row">
+          <div class="hero-stat-pill"><i>⚡</i> &lt; 300ms Gate Throughput</div>
+          <div class="hero-stat-pill"><i>🧠</i> 128-D Neural Embeddings</div>
+          <div class="hero-stat-pill"><i>🛡️</i> Anti-Passback Fraud Shield</div>
+          <div class="hero-stat-pill"><i>🚊</i> Metro · Train · Bus Rapid</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Public Transit Advisories & Announcements Ticker -->
+  <div class="announcements-ticker-wrap" id="public-announcements-wrap">
+    <div class="announcements-badge"><span>⚡</span> TRANSIT ADVISORY</div>
+    <div class="announcements-content" id="public-announcements-text">
+      ● AI Biometric Turnstile Terminals operational across Pune Metro, Bus, and Suburban train corridors.
+    </div>
+  </div>
+
+  <!-- Main View Container -->
+  <main class="main-container">
+
+    <!-- VIEW 1: LIVE 3D GATE SIMULATOR -->
+    <section id="gate" class="view-section">
+      <!-- Real-time Gate Override Mode Indicator -->
+      <div id="gate-status-banner" class="gate-status-banner normal">
+        <span id="gate-status-banner-text">● CENTRAL TRANSIT CORE ONLINE · STANDARD BIOMETRIC ACCESS PROTOCOL</span>
+        <span style="font-size:0.75rem; color:var(--text-dim);" id="gate-status-banner-sub">AI Anti-Passback Active (20s)</span>
+      </div>
+
+      <div class="two-col-grid">
+        
+        <!-- Left: Biometric Viewfinder Scanner -->
+        <div class="glass-card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title"><span>👁️</span> Biometric Gate Scanner</h2>
+              <p class="card-subtitle">Position face in optical reticle to trigger turnstile authorization.</p>
+            </div>
+            <span class="brand-badge" id="gate-terminal-badge">GATE #01 · PUNE METRO</span>
+          </div>
+
+          <!-- Video & Canvas Viewfinder -->
+          <div class="viewfinder-wrapper">
+            <video id="v-gate" class="viewfinder-video" autoplay muted playsinline></video>
+            <canvas id="c-gate" class="viewfinder-canvas"></canvas>
+            
+            <div class="viewfinder-hud">
+              <div class="hud-laser"></div>
+              <div class="hud-corner tl"></div>
+              <div class="hud-corner tr"></div>
+              <div class="hud-corner bl"></div>
+              <div class="hud-corner br"></div>
+              <div class="hud-reticle-center"></div>
+              <div class="hud-status-badge"><span>● OPTICAL HUD: ACTIVE</span></div>
+              <div class="hud-confidence-gauge">SSD: 128-D VEC</div>
+            </div>
+          </div>
+
+          <!-- Gate Controls -->
+          <div style="margin-top:1.25rem;">
+            <div class="input-group">
+              <label class="input-label" for="gs">Select Current Transit Station &amp; Mode</label>
+              <select id="gs" class="cyber-select"></select>
+            </div>
+
+            <div class="input-group" style="margin-bottom:0.4rem;">
+              <label class="input-label" for="sim-profile-select">Biometric Face Source (Live Camera or Demo Commuter)</label>
+              <select id="sim-profile-select" class="cyber-select">
+                <option value="webcam">🎥 Live Webcam (Face-API AI)</option>
+                <option value="unknown">🚫 Simulated Stranger (Fraud Test / Lock Gate)</option>
+              </select>
+            </div>
+
+            <!-- Quick Commuter Selector Chips -->
+            <div>
+              <div style="font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono); margin-bottom:0.25rem;">
+                ⚡ Quick 1-Click Commuter Switcher:
+              </div>
+              <div class="quick-commuter-chips" id="gate-commuter-chips"></div>
+            </div>
+
+            <div class="btn-row" style="margin-top:0.85rem;">
+              <button class="btn-cyber" onclick="performGateScan()">
+                <span>⚡</span> Scan Face (Entry / Exit)
+              </button>
+              
+              <label style="display:flex; align-items:center; gap:0.5rem; cursor:pointer; font-size:0.88rem; color:var(--text-muted); margin-left:0.5rem;">
+                <input type="checkbox" id="auto-scan-toggle" style="accent-color:var(--cyan-primary); width:16px; height:16px;">
+                Auto-scan every 4s
+              </label>
+            </div>
+
+            <!-- Gate Feedback Box -->
+            <div id="gmsg" style="margin-top:0.75rem;"></div>
+
+            <!-- Digital Ticket / Boarding Pass Slot -->
+            <div id="ticket-receipt-slot"></div>
+          </div>
+        </div>
+
+        <!-- Right: Real-Time 3D Interactive Turnstile Gate -->
+        <div class="glass-card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title"><span>🛡️</span> 3D Turnstile Gate Simulation</h2>
+              <p class="card-subtitle">Interactive Three.js physics &amp; motorized acrylic barrier flaps.</p>
+            </div>
+            <div class="gate-3d-badge">
+              <span>●</span> 3D WebGL Engine
+            </div>
+          </div>
+
+          <!-- 3D Canvas Host -->
+          <div class="gate-3d-container" id="gate-threejs-container">
+            <div class="gate-state-indicator idle" id="gate-3d-status">
+              <span>🛡️</span> <span>Ready for Passenger Scan</span>
+            </div>
+          </div>
+
+          <div style="margin-top:0.85rem; display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; color:var(--text-dim); font-family:var(--font-mono);">
+            <span>🖱️ Drag mouse to orbit turnstile in 3D</span>
+            <span>⚡ Flaps pivot open on authorization</span>
+          </div>
+
+          <!-- Rules Summary -->
+          <div style="margin-top:1rem; padding:0.85rem 1rem; border-radius:var(--radius-sm); background:rgba(10, 16, 30, 0.7); border:1px solid var(--border-subtle); font-size:0.82rem; color:var(--text-muted); line-height:1.6;">
+            <b style="color:var(--text-main);">Gate Protocol:</b> First scan establishes <span style="color:#38bdf8; font-weight:700;">ENTRY</span>. Subsequent scan at destination triggers <span style="color:#34d399; font-weight:700;">EXIT</span> with zone-based fare deduction. Unregistered faces or balance &lt; ₹10 lock barriers with alarm strobe.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: PASSENGER REGISTRATION -->
+    <section id="register" class="view-section hide">
+      <div class="two-col-grid">
+        
+        <!-- Registration Form -->
+        <div class="glass-card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title"><span>👤</span> Biometric Enrollment</h2>
+              <p class="card-subtitle">Link your facial identity with Pune Transit Unified Wallet.</p>
+            </div>
+            <span class="brand-badge">NEW COMMUTER</span>
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="rn">Full Legal Name</label>
+            <input id="rn" class="cyber-input" placeholder="e.g. Atharv Shinde">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="re">Email Address</label>
+            <input id="re" type="email" class="cyber-input" placeholder="commuter@transit.pune.in">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="rp">Phone Number (Optional)</label>
+            <input id="rp" class="cyber-input" placeholder="+91 98765 43210">
+          </div>
+
+          <div class="input-group">
+            <label class="input-label" for="rk">Passenger Category</label>
+            <select id="rk" class="cyber-select">
+              <option value="resident">Daily Resident Commuter</option>
+              <option value="tourist">Tourist / Short-Term Visitor</option>
+            </select>
+          </div>
+
+          <div class="btn-row" style="margin-top:1.25rem;">
+            <button class="btn-cyber emerald" onclick="registerUser()">
+              <span>📸</span> Capture Face &amp; Complete Registration
+            </button>
+            <button class="btn-cyber secondary" type="button" onclick="quickRegisterDemoUser()">
+              <span>⚡</span> Instant Demo Face (No Camera)
+            </button>
+          </div>
+
+          <div id="rmsg"></div>
+
+          <!-- Feature Bullets -->
+          <div style="margin-top:1.5rem; border-top:1px solid var(--border-subtle); padding-top:1rem; display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; font-size:0.8rem; color:var(--text-dim);">
+            <div>🔒 Zero image storage (only 128D vector hash)</div>
+            <div>⚡ Immediate gate authorization</div>
+            <div>🎁 Preloaded ₹50 welcome bonus wallet</div>
+            <div>🌐 Universal Metro / Bus / Train compatibility</div>
+          </div>
+        </div>
+
+        <!-- Camera Enrollment Viewfinder -->
+        <div class="glass-card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title"><span>📷</span> Enrollment Optical HUD</h2>
+              <p class="card-subtitle">Look straight ahead into the lens with balanced lighting.</p>
+            </div>
+            <span class="brand-badge">AI ENROLLMENT</span>
+          </div>
+
+          <div class="viewfinder-wrapper">
+            <video id="v-register" class="viewfinder-video" autoplay muted playsinline></video>
+            <canvas id="c-register" class="viewfinder-canvas"></canvas>
+            
+            <div class="viewfinder-hud">
+              <div class="hud-laser"></div>
+              <div class="hud-corner tl"></div>
+              <div class="hud-corner tr"></div>
+              <div class="hud-corner bl"></div>
+              <div class="hud-corner br"></div>
+              <div class="hud-reticle-center"></div>
+              <div class="hud-status-badge"><span>● FACIAL LANDMARKS 68-PT</span></div>
+            </div>
+          </div>
+
+          <div style="margin-top:1.25rem; padding:1rem; border-radius:var(--radius-sm); background:rgba(6, 182, 212, 0.08); border:1px solid rgba(6, 182, 212, 0.25); font-size:0.82rem; color:var(--cyan-bright); line-height:1.5;">
+            💡 <b>Biometric Encryption Guarantee:</b> We extract mathematical facial embeddings directly in your browser using client-side AI. Your private camera image is never uploaded to the server.
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 3: MY BIOMETRIC ACCOUNT & HOLOGRAPHIC CARD -->
+    <section id="me" class="view-section hide">
+      <div class="two-col-grid">
+        
+        <!-- Camera Identification -->
+        <div class="glass-card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title"><span>🔍</span> Biometric Identity Login</h2>
+              <p class="card-subtitle">Face the camera to authenticate and load your passenger wallet.</p>
+            </div>
+            <span class="brand-badge">TOUCHLESS AUTH</span>
+          </div>
+
+          <div class="viewfinder-wrapper">
+            <video id="v-me" class="viewfinder-video" autoplay muted playsinline></video>
+            <canvas id="c-me" class="viewfinder-canvas"></canvas>
+            
+            <div class="viewfinder-hud">
+              <div class="hud-laser"></div>
+              <div class="hud-corner tl"></div>
+              <div class="hud-corner tr"></div>
+              <div class="hud-corner bl"></div>
+              <div class="hud-corner br"></div>
+              <div class="hud-reticle-center"></div>
+              <div class="hud-status-badge"><span>● BIOMETRIC MATCHER</span></div>
+            </div>
+          </div>
+
+          <div class="input-group" style="margin-top:1.25rem;">
+            <label class="input-label" for="me-sim-profile-select">Biometric Face Source (or Direct Profile)</label>
+            <select id="me-sim-profile-select" class="cyber-select">
+              <option value="webcam">🎥 Live Webcam (Face-API AI)</option>
+            </select>
+          </div>
+
+          <div class="btn-row" style="margin-top:0.75rem;">
+            <button class="btn-cyber" onclick="identifyUser()">
+              <span>⚡</span> Authenticate Me by Face
+            </button>
+            <button class="btn-cyber secondary" onclick="loginSelectedDemoProfile()">
+              <span>👤</span> View Profile Directly
+            </button>
+          </div>
+
+          <div id="profile-msg"></div>
+        </div>
+
+        <!-- 3D Holographic Digital Transit Card Preview -->
+        <div class="glass-card">
+          <div class="card-header-flex">
+            <div>
+              <h2 class="card-title"><span>💳</span> Digital Transit Passport</h2>
+              <p class="card-subtitle">Hover and tilt to inspect your 3D biometric smartcard.</p>
+            </div>
+            <span class="brand-badge">NFC / RFID SECURE</span>
+          </div>
+
+          <!-- 3D Tilt Card Component -->
+          <div class="card-perspective-container">
+            <div class="holo-smart-card">
+              <div class="holo-glare-effect"></div>
+              <div class="holo-circuit-pattern"></div>
+              
+              <!-- Card Top -->
+              <div class="holo-card-top">
+                <div class="chip-group">
+                  <div class="microchip-gold"></div>
+                  <span class="nfc-waves">📶</span>
+                </div>
+                <div class="holo-network-logo">BIOTRANSIT</div>
+              </div>
+
+              <!-- Card Middle (Balance) -->
+              <div class="holo-card-mid">
+                <div class="holo-balance-label">Transit Wallet Balance</div>
+                <div class="holo-balance-val" id="holo-card-balance">₹ 0.00</div>
+              </div>
+
+              <!-- Card Bottom (User Info) -->
+              <div class="holo-card-bottom">
+                <div>
+                  <div class="holo-user-name" id="holo-card-name">AUTHENTICATE FIRST</div>
+                  <div class="holo-user-id" id="holo-card-id">ID: BIO-0000-PUN</div>
+                </div>
+                <span class="holo-pass-badge" id="holo-card-pass">PAY-AS-YOU-GO</span>
+              </div>
+            </div>
+          </div>
+
+          <p style="text-align:center; font-size:0.75rem; color:var(--text-dim); font-family:var(--font-mono); margin-top:0.75rem;">
+            🖱️ Move cursor over card for 3D holographic tilt &amp; specular reflection
+          </p>
+        </div>
+
+      </div>
+
+      <!-- Wallet Management & History Panel (Reveals after auth) -->
+      <div id="account-details-panel" class="glass-card hide" style="margin-top:1.5rem;">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title"><span>⚡</span> Instant Wallet Top-Up &amp; Tourist Passes</h2>
+            <p class="card-subtitle">Recharge balance or activate unlimited multi-day transit passes.</p>
+          </div>
+          <span class="brand-badge">INSTANT RECHARGE</span>
+        </div>
+
+        <!-- Quick Top Up Chips & Custom Input -->
+        <div style="margin-bottom:1.5rem;">
+          <div class="input-label" style="margin-bottom:0.6rem;">Quick Wallet Recharge:</div>
+          <div class="btn-row" style="margin-bottom:0.75rem;">
+            <button class="btn-cyber secondary" onclick="topupBalance(100)">+ ₹100</button>
+            <button class="btn-cyber secondary" onclick="topupBalance(200)">+ ₹200</button>
+            <button class="btn-cyber secondary" onclick="topupBalance(500)">+ ₹500</button>
+            <button class="btn-cyber secondary" onclick="topupBalance(1000)">+ ₹1,000</button>
+          </div>
+          <div style="display:flex; gap:0.5rem; max-width:360px;">
+            <input id="custom-topup-amt" type="number" class="cyber-input" placeholder="Custom amount (₹)">
+            <button class="btn-cyber" onclick="topupCustomBalance()">Add Funds</button>
+          </div>
+        </div>
+
+        <!-- Tourist Pass Tier Cards -->
+        <div class="input-label" style="margin-bottom:0.6rem;">Unlimited Passes (Free Travel across All Pune Zones):</div>
+        <div class="tier-plans-grid">
+          <div class="tier-card" onclick="buyPassPlan('1-day')">
+            <div class="tier-title">1-Day Pass</div>
+            <div class="tier-price">₹150</div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.85rem;">Unlimited travel on Bus, Metro, &amp; Train for 24 hours.</p>
+            <button class="btn-cyber secondary" style="width:100%; padding:0.5rem;">Activate</button>
+          </div>
+
+          <div class="tier-card featured" onclick="buyPassPlan('3-day')">
+            <div class="brand-badge" style="position:absolute; top:8px; right:8px;">POPULAR</div>
+            <div class="tier-title">3-Day Explorer</div>
+            <div class="tier-price">₹350</div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.85rem;">Unlimited travel across Pune transit network for 72 hours.</p>
+            <button class="btn-cyber" style="width:100%; padding:0.5rem;">Activate</button>
+          </div>
+
+          <div class="tier-card" onclick="buyPassPlan('7-day')">
+            <div class="tier-title">7-Day Mega Pass</div>
+            <div class="tier-price">₹700</div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.85rem;">One full week of unlimited multi-modal biometric transit.</p>
+            <button class="btn-cyber secondary" style="width:100%; padding:0.5rem;">Activate</button>
+          </div>
+
+          <div class="tier-card" onclick="buyPassPlan('30-day-vip')">
+            <div class="tier-title">30-Day VIP Pass</div>
+            <div class="tier-price">₹2,000</div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:0.85rem;">Monthly unlimited commuter access across all network corridors.</p>
+            <button class="btn-cyber secondary" style="width:100%; padding:0.5rem;">Activate</button>
+          </div>
+        </div>
+
+        <div id="wallet-msg" style="margin-top:1rem;"></div>
+
+        <!-- Commuter Attendance Compliance Card -->
+        <div class="glass-card" style="margin-top:2rem; margin-bottom:1.5rem; background:rgba(15, 23, 42, 0.75);">
+          <div class="card-header-flex">
+            <div>
+              <h3 style="font-size:1.05rem; font-family:var(--font-display); color:#fff; display:flex; align-items:center; gap:0.5rem;">
+                <span>🕒</span> Biometric Attendance &amp; Commute Compliance
+              </h3>
+              <p style="font-size:0.8rem; color:var(--text-muted);">
+                Automatic biometric attendance logging verified at Pune Metro, Bus, and Suburban train gates.
+              </p>
+            </div>
+            <span class="brand-badge" id="my-att-rate-badge">0% COMPLIANCE</span>
+          </div>
+          
+          <div class="two-col-grid" style="margin-bottom:0; gap:1rem; align-items:center;">
+            <div>
+              <div style="display:flex; justify-content:space-between; font-size:0.84rem; margin-bottom:0.45rem;">
+                <span style="color:var(--text-muted); font-family:var(--font-mono);">Days Present in Network:</span>
+                <strong id="my-att-days-text">0 / 0 Operational Days</strong>
+              </div>
+              <div class="mode-progress-track">
+                <div id="my-att-progress-bar" class="mode-progress-fill metro" style="width:0%;"></div>
+              </div>
+            </div>
+            <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.85rem; display:flex; justify-content:space-around; text-align:center;">
+              <div>
+                <small style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; font-family:var(--font-mono); display:block;">Total Check-ins</small>
+                <strong style="font-size:1.15rem; color:#fff;" id="my-att-checkins-count">0</strong>
+              </div>
+              <div>
+                <small style="font-size:0.7rem; color:var(--text-dim); text-transform:uppercase; font-family:var(--font-mono); display:block;">Gate Verification</small>
+                <strong style="font-size:0.85rem; color:var(--emerald-success);">Biometric 128-D</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Journeys & Transactions History Tables -->
+        <div class="two-col-grid" style="margin-top:2rem;">
+          <div>
+            <h3 style="font-size:1.05rem; font-family:var(--font-display); margin-bottom:0.75rem; color:#fff;">
+              Recent Journeys Ledger
+            </h3>
+            <div class="table-responsive">
+              <table class="cyber-table" id="tj"></table>
+            </div>
+          </div>
+          <div>
+            <h3 style="font-size:1.05rem; font-family:var(--font-display); margin-bottom:0.75rem; color:#fff;">
+              Transaction Ledger
+            </h3>
+            <div class="table-responsive">
+              <table class="cyber-table" id="tt"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 4: TRANSIT NETWORK MAP & ROUTE PLANNER -->
+    <section id="network" class="view-section hide">
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title"><span>🗺️</span> Transit Network Corridor &amp; Interactive Route Planner</h2>
+            <p class="card-subtitle">Real-time zone fare calculator and multi-modal topology for Pune transit.</p>
+          </div>
+          <span class="brand-badge">INTERACTIVE MAP</span>
+        </div>
+
+        <!-- Route Fare Estimator Controls -->
+        <div class="two-col-grid" style="margin-bottom:1.5rem; align-items:center;">
+          <div>
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
+              <div class="input-group">
+                <label class="input-label" for="route-from">Departure Station</label>
+                <select id="route-from" class="cyber-select"></select>
+              </div>
+              <div class="input-group">
+                <label class="input-label" for="route-to">Arrival Station</label>
+                <select id="route-to" class="cyber-select"></select>
+              </div>
+            </div>
+            <button class="btn-cyber" onclick="setPlannedRouteToGate()" style="margin-top:0.5rem;">
+              <span>🚀</span> Travel From This Station (Open Gate Simulator)
+            </button>
+          </div>
+
+          <div style="background:rgba(10, 16, 30, 0.75); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1.25rem; display:flex; justify-content:space-around; align-items:center;">
+            <div>
+              <small style="font-family:var(--font-mono); font-size:0.72rem; color:var(--text-dim); text-transform:uppercase;">Estimated Fare</small>
+              <div style="font-family:var(--font-display); font-size:2rem; font-weight:800; color:var(--cyan-bright);" id="route-fare-badge">₹ 15</div>
+            </div>
+            <div>
+              <div style="font-family:var(--font-mono); font-size:0.8rem; color:var(--emerald-glow);" id="route-zone-diff">Zone Diff: 1</div>
+              <div style="font-family:var(--font-mono); font-size:0.75rem; color:var(--text-muted);" id="route-time-est">~ 18 mins travel time</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Visual Network Topology Diagram (SVG) -->
+        <div class="transit-map-container" style="margin-bottom:2rem;">
+          <div style="display:flex; justify-content:space-between; margin-bottom:1rem; font-size:0.78rem; font-family:var(--font-mono); color:var(--text-muted);">
+            <span>● RED LINE (METRO) · GREEN LINE (BUS RAPID) · BLUE LINE (SUBURBAN TRAIN)</span>
+            <span>ZONE FORMULA: ₹10 + ₹5 × |Z1 - Z2|</span>
+          </div>
+
+          <div class="map-svg-wrapper">
+            <svg viewBox="0 0 800 240" style="width:100%; height:auto;">
+              <defs>
+                <linearGradient id="metroGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#ec4899" />
+                  <stop offset="100%" stop-color="#a855f7" />
+                </linearGradient>
+                <linearGradient id="trainGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#3b82f6" />
+                  <stop offset="100%" stop-color="#06b6d4" />
+                </linearGradient>
+                <linearGradient id="busGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stop-color="#10b981" />
+                  <stop offset="100%" stop-color="#84cc16" />
+                </linearGradient>
+                <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              <!-- Lines -->
+              <path d="M 80,180 Q 240,160 400,180 T 720,180" fill="none" stroke="url(#busGrad)" stroke-width="5" filter="url(#glow)" />
+              <path d="M 80,120 L 240,120 L 400,120 L 560,120 L 720,120" fill="none" stroke="url(#metroGrad)" stroke-width="5" filter="url(#glow)" />
+              <path d="M 80,60 Q 240,80 400,60 T 720,60" fill="none" stroke="url(#trainGrad)" stroke-width="5" filter="url(#glow)" />
+
+              <!-- Nodes -->
+              <g class="station-node-group" transform="translate(100, 180)">
+                <circle r="9" fill="#050811" stroke="#10b981" stroke-width="4" />
+                <text y="24" text-anchor="middle" fill="#fff" font-size="11" font-family="'Outfit', sans-serif" font-weight="600">Swargate</text>
+                <text y="36" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono'">Zone 1 · Bus</text>
+              </g>
+
+              <g class="station-node-group" transform="translate(240, 120)">
+                <circle r="9" fill="#050811" stroke="#a855f7" stroke-width="4" />
+                <text y="24" text-anchor="middle" fill="#fff" font-size="11" font-family="'Outfit', sans-serif" font-weight="600">Shivajinagar</text>
+                <text y="36" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono'">Zone 2 · Metro</text>
+              </g>
+
+              <g class="station-node-group" transform="translate(380, 120)">
+                <circle r="9" fill="#050811" stroke="#a855f7" stroke-width="4" />
+                <text y="24" text-anchor="middle" fill="#fff" font-size="11" font-family="'Outfit', sans-serif" font-weight="600">Deccan</text>
+                <text y="36" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono'">Zone 3 · Metro</text>
+              </g>
+
+              <g class="station-node-group" transform="translate(500, 60)">
+                <circle r="9" fill="#050811" stroke="#06b6d4" stroke-width="4" />
+                <text y="24" text-anchor="middle" fill="#fff" font-size="11" font-family="'Outfit', sans-serif" font-weight="600">Pune Jcn</text>
+                <text y="36" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono'">Zone 3 · Train</text>
+              </g>
+
+              <g class="station-node-group" transform="translate(620, 180)">
+                <circle r="9" fill="#050811" stroke="#10b981" stroke-width="4" />
+                <text y="24" text-anchor="middle" fill="#fff" font-size="11" font-family="'Outfit', sans-serif" font-weight="600">Hinjewadi</text>
+                <text y="36" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono'">Zone 5 · Bus</text>
+              </g>
+
+              <g class="station-node-group" transform="translate(720, 60)">
+                <circle r="9" fill="#050811" stroke="#06b6d4" stroke-width="4" />
+                <text y="24" text-anchor="middle" fill="#fff" font-size="11" font-family="'Outfit', sans-serif" font-weight="600">Pimpri</text>
+                <text y="36" text-anchor="middle" fill="#94a3b8" font-size="9" font-family="'JetBrains Mono'">Zone 6 · Train</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <!-- All Stations Directory Grid -->
+        <div>
+          <h3 style="font-family:var(--font-display); font-size:1.15rem; color:#fff; margin-bottom:0.75rem;">
+            Station Network Directory
+          </h3>
+          <div class="station-admin-grid" id="network-station-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 5: COMMUTER FEEDBACK & SUPPORT -->
+    <section id="feedback" class="view-section hide">
+      <div class="glass-card">
+        <div class="card-header-flex">
+          <div>
+            <h2 class="card-title"><span>💬</span> Passenger Feedback &amp; Public Voice</h2>
+            <p class="card-subtitle">Share your biometric transit experience, report issues, or suggest new station corridors.</p>
+          </div>
+          <span class="brand-badge">PUBLIC VOICE</span>
+        </div>
+
+        <div class="two-col-grid">
+          <!-- Left: Feedback Submission Form -->
+          <div style="background:rgba(10, 16, 30, 0.7); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:1.75rem;">
+            <h3 style="font-family:var(--font-display); font-size:1.15rem; color:#fff; margin-bottom:0.4rem;">
+              Submit Passenger Review
+            </h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1.25rem;">
+              Your feedback is transmitted directly to the Central Transit Authority Command Center.
+            </p>
+
+            <form onsubmit="submitPublicFeedbackForm(event)">
+              <div class="input-group">
+                <label class="input-label" for="fb-name">Your Full Name</label>
+                <input id="fb-name" type="text" class="cyber-input" placeholder="e.g. Atharv Shinde" required>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="fb-email">Email Address</label>
+                <input id="fb-email" type="email" class="cyber-input" placeholder="e.g. commuter@example.com">
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="fb-category">Feedback Category</label>
+                <select id="fb-category" class="cyber-select">
+                  <option value="General">General Transit Experience</option>
+                  <option value="Gate Issue">Gate &amp; Facial Scanner Issue</option>
+                  <option value="Payment">Wallet, Fares &amp; Passes</option>
+                  <option value="Suggestion">Corridor &amp; Route Suggestion</option>
+                  <option value="Transit Bug">Mobile &amp; Web App Bug</option>
+                </select>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label">Transit Experience Rating</label>
+                <div class="star-rating-box" id="fb-star-container">
+                  <span data-star="1" onclick="setFeedbackRating(1)">★</span>
+                  <span data-star="2" onclick="setFeedbackRating(2)">★</span>
+                  <span data-star="3" onclick="setFeedbackRating(3)">★</span>
+                  <span data-star="4" onclick="setFeedbackRating(4)">★</span>
+                  <span data-star="5" onclick="setFeedbackRating(5)" class="active">★</span>
+                </div>
+                <input type="hidden" id="fb-rating-val" value="5">
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="fb-subject">Subject</label>
+                <input id="fb-subject" type="text" class="cyber-input" placeholder="e.g. Sub-second turnstile passage at Swargate" required>
+              </div>
+
+              <div class="input-group">
+                <label class="input-label" for="fb-message">Detailed Comments</label>
+                <textarea id="fb-message" class="cyber-input" rows="4" style="resize:vertical;" placeholder="Tell us about your commute..." required></textarea>
+              </div>
+
+              <button type="submit" id="btn-submit-fb" class="btn-cyber" style="width:100%; margin-top:0.75rem;">
+                <span>🚀</span> Transmit Feedback to Central Command
+              </button>
+            </form>
+          </div>
+
+          <!-- Right: Community Feedback & Official Admin Responses -->
+          <div>
+            <h3 style="font-family:var(--font-display); font-size:1.15rem; color:#fff; margin-bottom:0.4rem;">
+              Verified Passenger Reviews &amp; Admin Replies
+            </h3>
+            <p style="font-size:0.82rem; color:var(--text-muted); margin-bottom:1rem;">
+              Real community feedback and official responses from Pune Transit Authority.
+            </p>
+            <div id="public-feedback-feed" style="display:flex; flex-direction:column; gap:0.85rem; max-height:550px; overflow-y:auto; padding-right:0.5rem;">
+              <!-- Dynamic reviews loaded via JS -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 6: RESTRICTED SEPARATE ADMIN PORTAL -->
+    <section id="admin" class="view-section hide">
+      <div class="glass-card" style="max-width:580px; margin:2.5rem auto; text-align:center; padding:3rem 2rem;">
+        <div style="width:68px; height:68px; border-radius:var(--radius-md); background:linear-gradient(135deg, #06b6d4, #8b5cf6); display:flex; align-items:center; justify-content:center; font-size:2rem; margin:0 auto 1.5rem; box-shadow:0 0 25px rgba(6,182,212,0.4);">🛡️</div>
+        <h2 style="font-family:var(--font-display); font-size:1.6rem; font-weight:800; color:#fff; margin-bottom:0.6rem;">
+          Dedicated Admin Control Panel
+        </h2>
+        <p style="font-size:0.88rem; color:var(--text-muted); line-height:1.6; margin-bottom:2rem;">
+          The BioTransit Enterprise Command Center is a completely separate administrative application with isolated security, commuter directory, attendance analytics, feedback moderation, and financial telemetry.
+        </p>
+
+        <a href="/admin/dashboard" target="_blank" class="btn-cyber" style="text-decoration:none; padding:1rem 2rem; font-size:1rem; display:inline-flex; align-items:center; gap:0.6rem;">
+          <span>🚀</span> Launch Central Admin Command Center ↗
+        </a>
+
+        <div style="margin-top:2rem; padding-top:1.5rem; border-top:1px solid var(--border-subtle); display:flex; justify-content:space-around; font-size:0.8rem; color:var(--text-dim); font-family:var(--font-mono);">
+          <span>Login: <a href="/admin/login" target="_blank" style="color:var(--cyan-bright);">/admin/login</a></span>
+          <span>Dashboard: <a href="/admin/dashboard" target="_blank" style="color:var(--cyan-bright);">/admin/dashboard</a></span>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Interactive Cyber Modal Container -->
+  <div id="cyber-modal-host"></div>
+
+  <!-- Cyber Toast Notifications Host -->
+  <div id="cyber-toast-container" class="cyber-toast-container"></div>
+
+  <!-- Interactive 3D Gate Simulation Engine -->
+  <script src="gate3d.js"></script>
+
+  <!-- Main Application Logic & Face API Controller -->
+  <script src="app.js"></script>
+</body>
+</html>
